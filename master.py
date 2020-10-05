@@ -7,6 +7,7 @@ app = Flask(__name__)
 PORT = 3030
 DEBUG = True
 users = {}
+# For storage servers pool
 storage_servers = []
 
 
