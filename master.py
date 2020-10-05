@@ -1,5 +1,5 @@
 from flask import Flask, Response
-from flask import jsonify, Response, request
+from flask import jsonify, Response, request, session
 import random
 import requests
 
@@ -62,6 +62,7 @@ def init():
         return Response(f"User '{username}' already exists")
     else:
         users[username] = password
+        session['username'] = username
         user_folder = FsTree(username)
         fs.add_child(user_folder)
         ss = random.choices(storage_servers, k = 3)
@@ -77,6 +78,7 @@ def login():
     current_users = list(users.keys())
     if username in current_users:
         if users[username] == password:
+            session['username'] = username
             return Response(f"Welcome back {username}")
         else:
             return Response(f"Wrong password")
@@ -86,7 +88,7 @@ def login():
 
 @app.route("/mkdir", methods=["PUT"])
 def mkdir():
-    current_dir = request.args["current_dir"]
+    current_dir = session['username'] + '/' + request.args["current_dir"]
     folder_name = request.args["folder_name"]
 
     temp = fs.get_child(current_dir)
