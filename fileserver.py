@@ -34,6 +34,6 @@ if __name__ == "__main__":
     name_server_ip = "128.0.0.1"
     master = Master()
     naming_listen_thread = Thread(target=master.listen_naming_server, args=(9000,))
-    naming_listen_thread .start()
+    naming_listen_thread.start()
     client_listen_thread = Thread(target=master.listen_client, args=(9001,))
-    client_listen_thread .start()
+    client_listen_thread.start()
