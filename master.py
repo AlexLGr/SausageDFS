@@ -16,8 +16,9 @@ storage_servers = ['1', '2', '3']
 
 
 class FsTree:
-    def __init__(self, name: str):
+    def __init__(self, name: str, path: str):
         self.name = name
+        self.path = path
         self.address = ""
         self.replicas = []
         self.children = []
@@ -67,7 +68,8 @@ class FsTree:
             sock.send(len(command).to_bytes(1, 'big'))
             sock.send(command.encode())
 
-            sock.send()
+            sock.send(len(self.path).to_bytes(1, 'big'))
+            sock.send(self.path.encode())
 
             sock.send(len(self.replicas).to_bytes(1, 'big'))
 
@@ -75,7 +77,7 @@ class FsTree:
                 sock.send(replica.encode())
 
 
-fs = FsTree('.')
+fs = FsTree('', '')
 
 
 @app.route("/init", methods=["PUT"])
@@ -87,7 +89,7 @@ def init():
         return Response(f"User '{username}' already exists", status=400)
     else:
         users[username] = password
-        user_folder = FsTree(username)
+        user_folder = FsTree(username, fs.path+'/'+username)
         fs.add_child(user_folder)
         ss = random.choices(storage_servers, k=3)
         for server in ss:
@@ -102,7 +104,7 @@ def login():
     current_users = list(users.keys())
     if username in current_users:
         if users[username] == password:
-            key = uuid.uuid1()
+            key = str(uuid.uuid1())
             sessions[key] = [username, datetime.now()]
             return Response(f"{key}", status=200)
         else:
@@ -114,15 +116,19 @@ def login():
 @app.route("/mkdir", methods=["PUT"])
 def mkdir():
     key = request.args["key"]
-    current_keys = sessions.keys()
+    # current_keys = sessions.keys()
     # session last for 10 minutes
-    if key in current_keys:
+    print(key)
+    print(sessions.keys())
+    if key in sessions:
         if (sessions[key][1] - datetime.now()).total_seconds() < 600:
-            current_dir = sessions[key] + '/' + request.args["current_dir"]
+            current_dir = sessions[key][0] + '/' + request.args["current_dir"]
             folder_name = request.args["folder_name"]
             temp = fs.get_child(current_dir)
             if temp:
-                temp.add_child(FsTree(folder_name))
+                temp.add_child(FsTree(folder_name, temp.path+'/'+folder_name))
+                fs.list_children()
+                temp.list_children()
                 return Response("Directory successfully created", status=200)
             else:
                 return Response("Error in creating directory, please verify your input", status=400)
