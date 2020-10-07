@@ -16,16 +16,20 @@ storage_servers = ['1', '2', '3']
 
 
 class FsTree:
-    def __init__(self, name: str, path: str):
+    def __init__(self, name: str):
         self.name = name
-        self.path = path
+        self.path = ""
         self.address = ""
         self.replicas = []
         self.children = []
         self.sync = False
 
+    def set_path(self, path: str):
+        self.path = path
+
     def add_child(self, child):
         if child not in self.children:
+            child.set_path(self.path + child.name)
             self.children.append(child)
             self.sync = False
         return True
@@ -77,7 +81,7 @@ class FsTree:
                 sock.send(replica.encode())
 
 
-fs = FsTree('', '')
+fs = FsTree('')
 
 
 @app.route("/init", methods=["PUT"])
@@ -89,7 +93,7 @@ def init():
         return Response(f"User '{username}' already exists", status=400)
     else:
         users[username] = password
-        user_folder = FsTree(username, fs.path+'/'+username)
+        user_folder = FsTree(username)
         fs.add_child(user_folder)
         ss = random.choices(storage_servers, k=3)
         for server in ss:
@@ -126,7 +130,7 @@ def mkdir():
             folder_name = request.args["folder_name"]
             temp = fs.get_child(current_dir)
             if temp:
-                temp.add_child(FsTree(folder_name, temp.path+'/'+folder_name))
+                temp.add_child(FsTree(folder_name))
                 fs.list_children()
                 temp.list_children()
                 return Response("Directory successfully created", status=200)
