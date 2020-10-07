@@ -2,12 +2,13 @@ from flask import Flask, Response
 from flask import jsonify, Response, request, session
 import random
 import requests
+import uuid
 
 app = Flask(__name__)
 PORT = 3030
 DEBUG = True
 users = {}
-logged_in = {}
+sessions = {}
 # For storage servers pool
 storage_servers = ['1', '2', '3']
 
@@ -78,8 +79,8 @@ def login():
     current_users = list(users.keys())
     if username in current_users:
         if users[username] == password:
-            key = random.randint(0, 10000)
-            logged_in[key] = username
+            key = uuid.uuid1()
+            sessions[key] = username
             return Response(f"{key}", status=200)
         else:
             return Response(f"Wrong password", status=400)
@@ -90,9 +91,9 @@ def login():
 @app.route("/mkdir", methods=["PUT"])
 def mkdir():
     secret_key = int(request.args["key"])
-    current_keys = logged_in.keys()
+    current_keys = sessions.keys()
     if secret_key in current_keys:
-        current_dir = logged_in[secret_key] + '/' + request.args["current_dir"]
+        current_dir = sessions[secret_key] + '/' + request.args["current_dir"]
         folder_name = request.args["folder_name"]
         temp = fs.get_child(current_dir)
         if temp:
@@ -107,9 +108,9 @@ def mkdir():
 @app.route("/logout", methods=["DELETE"])
 def logout():
     key = int(request.args["key"])
-    current_keys = logged_in.keys()
+    current_keys = sessions.keys()
     if key in current_keys:
-        logged_in.pop(key)
+        sessions.pop(key)
         return Response("Your session is now closed, to come back please use 'login' command",
                         status=200)
     else:
