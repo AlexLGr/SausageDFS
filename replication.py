@@ -15,8 +15,8 @@ def replicate(connection, address):
 
     ips = list()
     for i in range(number_of_ips):
-        ip_size= int.from_bytes(connection.recv(1), 'big') #receive filename size
-        ip = (connection.recv(ip_size)).decode() #receive filename
+        ip_size= int.from_bytes(connection.recv(1), 'big') #receive ip size
+        ip = (connection.recv(ip_size)).decode() #receive ip
         ips.append(ip)
     for ip in ips:
         send_replica(ip, replicate_path)
