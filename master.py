@@ -31,16 +31,14 @@ class FsTree:
         if child not in self.children:
             child.set_path(self.path + child.name)
             self.children.append(child)
-            self.sync = False
         return True
 
-    def add_replicas(self, replica_address: str):
-        if replica_address in self.replicas:
-            return False
-        else:
-            self.replicas.append(replica_address)
-            self.sync = False
-            return True
+    def set_replicas(self, replicas: str):
+        self.replicas = replicas
+        for child in self.children:
+            child.set_replicas(replicas)
+        self.sync = False
+        return True
 
     def set_address(self, address: str):
         self.address = address
@@ -78,10 +76,22 @@ class FsTree:
             sock.send(len(self.replicas).to_bytes(1, 'big'))
 
             for replica in self.replicas:
-                sock.send(replica.encode())
+                if replica != self.address:
+                    sock.send(replica.encode())
 
 
 fs = FsTree('')
+
+
+def check_session(key):
+    if key in sessions:
+        if (sessions[key][1] - datetime.now()).total_seconds() < 600:
+            return True
+        else:
+            sessions.pop(key)
+            return False
+    else:
+        return False
 
 
 @app.route("/init", methods=["PUT"])
@@ -96,8 +106,7 @@ def init():
         user_folder = FsTree(username)
         fs.add_child(user_folder)
         ss = random.choices(storage_servers, k=3)
-        for server in ss:
-            user_folder.add_replicas(server)
+        user_folder.set_replicas(ss)
         return Response(f"User '{username}' was successfully created", status=200)
 
 
@@ -120,25 +129,31 @@ def login():
 @app.route("/mkdir", methods=["PUT"])
 def mkdir():
     key = request.args["key"]
-    # current_keys = sessions.keys()
-    # session last for 10 minutes
-    print(key)
-    print(sessions.keys())
-    if key in sessions:
-        if (sessions[key][1] - datetime.now()).total_seconds() < 600:
-            current_dir = sessions[key][0] + '/' + request.args["current_dir"]
-            folder_name = request.args["folder_name"]
-            temp = fs.get_child(current_dir)
-            if temp:
-                temp.add_child(FsTree(folder_name))
-                fs.list_children()
-                temp.list_children()
-                return Response("Directory successfully created", status=200)
-            else:
-                return Response("Error in creating directory, please verify your input", status=400)
+    if check_session(key):
+        current_dir = sessions[key][0] + '/' + request.args["current_dir"]
+        folder_name = request.args["folder_name"]
+        temp = fs.get_child(current_dir)
+        if temp:
+            temp.add_child(FsTree(folder_name))
+            for server in temp.replicas:
+                port = 9000
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((server, port))
+
+                command = "mkdir"
+
+                sock.send(len(command).to_bytes(1, 'big'))
+                sock.send(command.encode())
+
+                sock.send(len(current_dir).to_bytes(1, 'big'))
+                sock.send(current_dir.encode())
+
+                sock.send(len(folder_name).to_bytes(1, 'big'))
+                sock.send(folder_name.encode())
+
+            return Response("Directory successfully created", status=200)
         else:
-            sessions.pop(key)
-            Response("Session time expired", status=400)
+            return Response("Error in creating directory, please verify your input", status=400)
     else:
         return Response("Operation unavailable, please log in first", status=400)
 
@@ -157,3 +172,4 @@ def logout():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=DEBUG)
+
