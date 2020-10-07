@@ -1,8 +1,10 @@
 from flask import Flask, Response
 from flask import jsonify, Response, request, session
+from datetime import datetime
 import random
 import requests
 import uuid
+import socket
 
 app = Flask(__name__)
 PORT = 3030
@@ -19,10 +21,12 @@ class FsTree:
         self.address = ""
         self.replicas = []
         self.children = []
+        self.sync = False
 
     def add_child(self, child):
         if child not in self.children:
             self.children.append(child)
+            self.sync = False
         return True
 
     def add_replicas(self, replica_address: str):
@@ -30,6 +34,7 @@ class FsTree:
             return False
         else:
             self.replicas.append(replica_address)
+            self.sync = False
             return True
 
     def set_address(self, address: str):
@@ -50,6 +55,24 @@ class FsTree:
     def list_children(self):
         for child in self.children:
             print(child.name)
+
+    def sync(self):
+        if not self.sync:
+            port = 9000
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((self.address, port))
+
+            command = "sync"
+
+            sock.send(len(command).to_bytes(1, 'big'))
+            sock.send(command.encode())
+
+            sock.send()
+
+            sock.send(len(self.replicas).to_bytes(1, 'big'))
+
+            for replica in self.replicas:
+                sock.send(replica.encode())
 
 
 fs = FsTree('.')
@@ -80,7 +103,7 @@ def login():
     if username in current_users:
         if users[username] == password:
             key = uuid.uuid1()
-            sessions[key] = username
+            sessions[key] = [username, datetime.now()]
             return Response(f"{key}", status=200)
         else:
             return Response(f"Wrong password", status=400)
@@ -90,17 +113,22 @@ def login():
 
 @app.route("/mkdir", methods=["PUT"])
 def mkdir():
-    secret_key = int(request.args["key"])
+    key = request.args["key"]
     current_keys = sessions.keys()
-    if secret_key in current_keys:
-        current_dir = sessions[secret_key] + '/' + request.args["current_dir"]
-        folder_name = request.args["folder_name"]
-        temp = fs.get_child(current_dir)
-        if temp:
-            temp.add_child(FsTree(folder_name))
-            return Response("Directory successfully created", status=200)
+    # session last for 10 minutes
+    if key in current_keys:
+        if (sessions[key][1] - datetime.now()).total_seconds() < 600:
+            current_dir = sessions[key] + '/' + request.args["current_dir"]
+            folder_name = request.args["folder_name"]
+            temp = fs.get_child(current_dir)
+            if temp:
+                temp.add_child(FsTree(folder_name))
+                return Response("Directory successfully created", status=200)
+            else:
+                return Response("Error in creating directory, please verify your input", status=400)
         else:
-            return Response("Error in creating directory, please verify your input", status=400)
+            sessions.pop(key)
+            Response("Session time expired", status=400)
     else:
         return Response("Operation unavailable, please log in first", status=400)
 
