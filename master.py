@@ -7,8 +7,9 @@ app = Flask(__name__)
 PORT = 3030
 DEBUG = True
 users = {}
+logged_in = {}
 # For storage servers pool
-storage_servers = []
+storage_servers = ['1', '2', '3']
 
 
 class FsTree:
@@ -16,11 +17,11 @@ class FsTree:
         self.name = name
         self.address = ""
         self.replicas = []
-        self.childs = []
+        self.children = []
 
     def add_child(self, child):
-        if child not in self.childs:
-            self.childs.append(child)
+        if child not in self.children:
+            self.children.append(child)
         return True
 
     def add_replicas(self, replica_address: str):
@@ -39,14 +40,14 @@ class FsTree:
 
         folders = path.split('/')
 
-        for child in self.childs:
+        for child in self.children:
             if child.name == folders[0]:
                 return child.get_child('/'.join(folders[1:]))
 
         return False
 
-    def list_childs(self):
-        for child in self.childs:
+    def list_children(self):
+        for child in self.children:
             print(child.name)
 
 
@@ -59,16 +60,15 @@ def init():
     password = request.args["password"]
     current_users = list(users.keys())
     if username in current_users:
-        return Response(f"User '{username}' already exists")
+        return Response(f"User '{username}' already exists", status=400)
     else:
         users[username] = password
-        session['username'] = username
         user_folder = FsTree(username)
         fs.add_child(user_folder)
-        ss = random.choices(storage_servers, k = 3)
+        ss = random.choices(storage_servers, k=3)
         for server in ss:
             user_folder.add_replicas(server)
-        return Response(f"User '{username}' was successfully created")
+        return Response(f"User '{username}' was successfully created", status=200)
 
 
 @app.route("/login", methods=["PUT"])
@@ -78,22 +78,42 @@ def login():
     current_users = list(users.keys())
     if username in current_users:
         if users[username] == password:
-            session['username'] = username
-            return Response(f"Welcome back {username}")
+            key = random.randint(0, 10000)
+            logged_in[key] = username
+            return Response(f"{key}", status=200)
         else:
-            return Response(f"Wrong password")
+            return Response(f"Wrong password", status=400)
     else:
-        return Response(f"User '{username}' does not exist")
+        return Response(f"User '{username}' does not exist", status=400)
 
 
 @app.route("/mkdir", methods=["PUT"])
 def mkdir():
-    current_dir = session['username'] + '/' + request.args["current_dir"]
-    folder_name = request.args["folder_name"]
+    secret_key = int(request.args["key"])
+    current_keys = logged_in.keys()
+    if secret_key in current_keys:
+        current_dir = logged_in[secret_key] + '/' + request.args["current_dir"]
+        folder_name = request.args["folder_name"]
+        temp = fs.get_child(current_dir)
+        if temp:
+            temp.add_child(FsTree(folder_name))
+            return Response("Directory successfully created", status=200)
+        else:
+            return Response("Error in creating directory, please verify your input", status=400)
+    else:
+        return Response("Operation unavailable, please log in first", status=400)
 
-    temp = fs.get_child(current_dir)
-    if temp:
-        temp.add_child(FsTree(folder_name))
+
+@app.route("/logout", methods=["DELETE"])
+def logout():
+    key = int(request.args["key"])
+    current_keys = logged_in.keys()
+    if key in current_keys:
+        logged_in.pop(key)
+        return Response("Your session is now closed, to come back please use 'login' command",
+                        status=200)
+    else:
+        return Response("No session found for your account, please log in", status=400)
 
 
 if __name__ == "__main__":

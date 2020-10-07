@@ -1,10 +1,14 @@
 import os
 import sys
 import requests
+from os.path import isabs, join, normpath
 
-working_directory = "/"
+working_directory = ""
 # TODO: change master address to the real thing
 MASTER = os.getenv("MASTER", "http://localhost:3030/")
+user = ""
+password = ""
+secret_key = "-1"
 
 
 def fidelity(args, amount):
@@ -28,41 +32,80 @@ def verify_response(resp):
 def initialize(*args):
     if not fidelity(args, 3):
         return 0
-    global working_directory
-    working_directory = args[1]
     password = args[2]
     resp = requests.put(
         os.path.join(
-            MASTER, f"init?username={working_directory}&password={password}"
+            MASTER, f"init?username={args[1]}&password={password}"
         )
     )
     v = verify_response(resp)
     if v:
-        print(f"The file system is successfully initialized")
         return 1
     else:
         return 0
 
 
 def close_session(*args):
-    print("Your session is now closed, to come back please use 'login' command")
-    sys.exit(0)
+    if not fidelity(args, 1):
+        return 0
+    resp = requests.delete(
+        os.path.join(
+            MASTER, f"logout?key={secret_key}"
+        )
+    )
+    v = verify_response(resp)
+    if v:
+        sys.exit(0)
 
 
 def login(*args):
     if not fidelity(args, 3):
         return 0
     username = args[1]
-    password = args[2]
+    ps = args[2]
     resp = requests.put(
         os.path.join(
-            MASTER, f"login?username={username}&password={password}"
+            MASTER, f"login?username={username}&password={ps}"
         )
     )
     v = verify_response(resp)
     if v:
-        global working_directory
-        working_directory = username
+        global secret_key
+        secret_key = resp.content.decode()
+        return 1
+    else:
+        return 0
+
+
+def upload_file(*args):
+    if not fidelity(args, 3):
+        return 0
+    filepath = args[1]
+    destination = args[2]
+    try:
+        file = open(filepath, "rb").read()
+    except OSError as e:
+        print(e)
+        return 0
+    if isabs(destination):
+        destination = normpath(destination)
+    else:
+        destination = normpath(join(working_directory, destination))
+    filename = os.path.basename(filepath)
+    path = join(destination, filename)
+    resp = requests.post(os.path.join(MASTER, f"files?filename={path}"))
+    v = verify_response(resp)
+    if v:
+        response = resp.json()
+        datanodes = response["nodes"]
+        file_id = response["file_id"]
+        for node in datanodes:
+            resp = requests.post(join(node, f'file?id={file_id}'), data=file)
+            v = verify_response(resp)
+            if v:
+                return 1
+            else:
+                return 0
         return 1
     else:
         return 0
@@ -76,16 +119,32 @@ def copy_file(*args):
     return 1
 
 
-def upload_file(*args):
-    return 1
-
-
 def change_dir(*args):
+    if not fidelity(args, 2):
+        return 0
+    path = args[1]
+    global working_directory
+    if isabs(path):
+        path = normpath(path)
+    else:
+        path = normpath(join(working_directory, path))
+    resp = requests.post(os.path.join(MASTER, f"dir?name={path}"))
+    v = verify_response(resp)
+    if v:
+        working_directory = path
     return 1
 
 
 def create_dir(*args):
-    return 1
+    if not fidelity(args, 2):
+        return 0
+    path = args[1]
+    resp = requests.put(os.path.join(MASTER, f"mkdir?current_dir={working_directory}"
+                                             f"&folder_name={path}"
+                                             f"&key={secret_key}"))
+    v = verify_response(resp)
+    if v:
+        return 1
 
 
 def download_file(*args):
@@ -124,20 +183,21 @@ def display_help(*args):
 
 
 commands = {
-    "help": display_help,
-    "init": initialize,
-    "login": login,
-    "exit": close_session,
+    "help": display_help, #DONE
+    "init": initialize, #DONE
+    "login": login, #DONE
+    "exit": close_session, #DONE
     "mv": move_file,
     "cp": copy_file,
     "put": upload_file,
     "cd": change_dir,
-    "mkdir": create_dir,
+    "mkdir": create_dir, #DONE
     "get": download_file,
     "ls": list_dir,
     "rm": remove_file,
     "rmd": remove_dir
 }
+
 
 if __name__ == "__main__":
     print("Client is running")
