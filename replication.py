@@ -56,7 +56,7 @@ def receive_replica(connection, address):
             length = int(clientfile.readline())
             print(f'Downloading {filename}...\n  Expecting {length:,} bytes...',end='',flush=True)
 
-            path = os.path.join(filename)
+            path = os.path.join('client',filename)
             os.makedirs(os.path.dirname(path),exist_ok=True)
 
             # Read the data in chunks so it can handle large files.
