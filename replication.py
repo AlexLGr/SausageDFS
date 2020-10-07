@@ -26,7 +26,7 @@ def send_replica(receiver_ip, rep_path):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((receiver_ip, 10003))
     print(rep_path)
-    for path,dirs,files in os.walk("testfolder"):
+    for path,dirs,files in os.walk("rep_path"):
         print(path, dirs, files)
         for file in files:
             filename = os.path.join(path,file)
