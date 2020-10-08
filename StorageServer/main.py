@@ -43,6 +43,12 @@ def client(connection, address):
         commands.mkdir(connection, address)
     elif(command == "replicate"):
         replication.replicate(connection, address)
+    elif(command == "mv"):
+        commands.mv(connection, address)
+    elif(command == "cp"):
+        commands.cp(connection, address)
+    elif(command == "get"):
+        commands.get(connection, address)
     return
 
 def virtual_path_to_real(path):

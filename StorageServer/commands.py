@@ -33,5 +33,51 @@ def mkdir(connection, address):
     dirname = (connection.recv(dirname_size)).decode() #receive filename
     print("Recieved dirname of file:", dirname)
 
-    os.mkdir(f"{virtual_path}{dirname}")
+    os.system(f'mkdir {virtual_path}{dirname}')
+    return
+
+def mv(connection, address):
+    from_path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
+    from_path = (connection.recv(from_path_size)).decode() #receive virtual path
+    print("Recieved from path:", from_path)
+
+    to_path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
+    to_path = (connection.recv(to_path_size)).decode() #receive virtual path
+    print("Recieved to path:", to_path)
+    os.system(f'mv {from_path} {to_path}')
+    #os.replace(from_path, to_path)
+    return
+
+def cp(connection, address):
+    from_path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
+    from_path = (connection.recv(from_path_size)).decode() #receive virtual path
+    print("Recieved from path:", from_path)
+
+    to_path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
+    to_path = (connection.recv(to_path_size)).decode() #receive virtual path
+    print("Recieved to path:", to_path)
+    os.system(f'cp {from_path} {to_path}')
+    return
+
+
+### GET NOT WORKING!
+def get(connection, address):
+    virtual_path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
+    virtual_path = (connection.recv(virtual_path_size)).decode() #receive virtual path
+    print("Recieved path:", virtual_path)
+
+    if os.path.isfile(virtual_path):
+        file_size = os.path.getsize(virtual_path)  #size of file
+        sent = 0
+        file = open(virtual_path, "rb")
+        while True:
+            print(f"{sent} of {file_size} bytes sent - {sent * 100 / file_size :.2f}% done")
+            buf = file.read(1024) #send data of file
+            if not buf:
+                break
+            sock.sendall(buf)
+            sent += len(buf)
+        print("Finished!")
+    else:
+        print("Failed.")
     return
