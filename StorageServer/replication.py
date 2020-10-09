@@ -24,9 +24,9 @@ def replicate(connection, address):
 
 def send_replica(receiver_ip, rep_path):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((receiver_ip, 10003))
+    sock.connect((receiver_ip, 10002))
     print(rep_path)
-    for path,dirs,files in os.walk("testfolder"):
+    for path,dirs,files in os.walk(rep_path):
         print(path, dirs, files)
         for file in files:
             filename = os.path.join(path,file)
@@ -56,7 +56,7 @@ def receive_replica(connection, address):
             length = int(clientfile.readline())
             print(f'Downloading {filename}...\n  Expecting {length:,} bytes...',end='',flush=True)
 
-            path = os.path.join(filename)
+            path = os.path.join('rootus',filename)
             os.makedirs(os.path.dirname(path),exist_ok=True)
 
             # Read the data in chunks so it can handle large files.
