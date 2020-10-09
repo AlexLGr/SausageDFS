@@ -155,5 +155,59 @@ def logout():
         return Response("No session found for your account, please log in", status=400)
 
 
+@app.route("/upload", methods=["POST"])
+def upload():
+    # получишь файл в переменной filename, отправишь лист IP серверов готовых принять файл в json
+    return Response("")
+
+
+@app.route("/mv", methods=["PUT"])
+def move():
+    # получишь файл в переменной source, конечный путь в destination
+    return Response("")
+
+
+@app.route("/cp", methods=["POST", "PUT"])
+def copy():
+    if request.method == "POST":
+        # получишь название файла в переменной name, проверь есть ли он в системе
+        pass
+    if request.method == "PUT":
+        # получишь название файла в переменной source, файл куда копировать
+        # в переменной destination
+        pass
+    return Response("")
+
+
+@app.route("/cd", methods=["POST"])
+def change_dir():
+    # получишь название директории в name
+    return Response("")
+
+
+@app.route("/download", methods=["POST"])
+def download():
+    # получишь название файла в filename, вернешь IP сервера в json
+    return Response("")
+
+
+@app.route("/ls", methods=["POST"])
+def ls():
+    # получишь директорию в name, вереншь лист детей в json
+    return Response("")
+
+
+@app.route("/remove_file", methods=["PUT"])
+def remove_file():
+    # получишь файл в name
+    return Response("")
+
+
+@app.route("/remove_dir", methods=["PUT"])
+def remove_dir():
+    # получишь директорию в name
+    return Response("")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=DEBUG)
