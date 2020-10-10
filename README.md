@@ -30,22 +30,20 @@ docker-compose up
 
 # Description of communication protocols
 ### General queries:  
-* ```help```                                                      : get information about available commands
-***TODO***
+* ***TODO*** ```help```                                                      : get information about available commands
+
 * ```init <username> <password>```                                : initialization of a new file system under specified username
 ![Init diagram](https://i.ibb.co/X4Fn456/INIT.png)
 * ```login <username> <password>```                               : continue using your filesystem
 ![Login diagram](https://i.ibb.co/28Wnvmm/login.png)
-* ```exit```                                                      : finish you session
-***TODO***
+* ***TODO*** ```exit```                                                      : finish you session
 
 ### File queries:
 * ```get <path>/<filename>```                                     : download a file to a local system (reading)
 ![Get diagram](https://i.ibb.co/vV7Wphj/get.png)
 * ```put filename <path>```                                       : put a local file to the filesystem at the specified destination
 ![Put diagram](https://i.ibb.co/SBMhcnP/put.png)
-* ??? ```touch <path>/<filename>```                               : ??? It will also support certain directory operations - listing, creation... ???
-***TODO***
+* ***TODO*** ??? ```touch <path>/<filename>```                               : ??? It will also support certain directory operations - listing, creation... ???
 * ```rm <path>/<filename>```                                      : remove a specified file
 ![RM diagram]()
 * ```cp <path from>/<filename> <path to>/<filename>```            : copy the content of the file to the different target file
@@ -54,11 +52,8 @@ docker-compose up
 ![MV diagram](https://i.ibb.co/VWvs88S/mv.png)
 
 ### Directory queries:
-* ```ls```                                                        : list contents of the current working directory
-***TODO***
-* ```mkdir <directory>```                                         : create a new directory
-***TODO***
+* ***TODO*** ```ls```                                                        : list contents of the current working directory
+* ***TODO*** ```mkdir <directory>```                                         : create a new directory
 ![MKDIR diagram](https://i.ibb.co/tKbL5QT/mkdir.png)
 * ```cd <destination>```                                          : change current working directory  
-* ```rmd <directory>```                                           : remove a directory
-***TODO***
+* ***TODO*** ```rmd <directory>```                                           : remove a directory
