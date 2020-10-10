@@ -27,3 +27,22 @@ docker-compose up
 ```
 # Architectural diagram
 ![Architecture diagram](https://i.ibb.co/m4SrnHb/123456.png)
+
+# Description of communication protocols
+"help                         : get information about available commands\n"
+"init <username> <password>   : initialization of a new file system under specified username\n"
+"login <username>             : continue using your filesystem\n"
+"exit
+
+```file reading, get
+writing,  put 
+creation, touch????
+deletion, rm
+copy, cp
+moving mv
+info queries  
+It will also support certain directory operations 
+listing,  ls
+creation mkdir 
+changing  cd
+deletion rmd
