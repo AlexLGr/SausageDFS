@@ -93,13 +93,14 @@ def upload_file(*args):
         destination = normpath(join(working_directory, destination))
     filename = os.path.basename(filepath)
     path = join(destination, filename)
-    resp = requests.post(os.path.join(MASTER, f"upload?filename={path}"))
+    resp = requests.post(os.path.join(MASTER, f"upload?filename={path}"
+                                              f"&key={secret_key}"))
     v = verify_response(resp)
     if v:
         response = resp.json()
         datanodes = response["nodes"]
         for node in datanodes:
-            resp = requests.put(join(node, f'upload?filename={path}'), data=file)
+            resp = requests.put(join(node, f"upload?filename={path}"), data=file)
             v = verify_response(resp)
             if v:
                 return 1
@@ -114,14 +115,17 @@ def move_file(*args):
     if not fidelity(args, 3):
         return 0
     file = args[1]
-    present = requests.post(os.path.join(MASTER, f"cp?name={file}"))
+    present = requests.post(os.path.join(MASTER, f"cp?name={file}"
+                                                 f"&key={secret_key}"))
     destination = args[2]
     tokens = destination.split("/")
     dest_dir = ' '.join(map(lambda x: '/' + str(x), tokens))
-    valid_destination = requests.post(os.path.join(MASTER, f"cd?name={dest_dir}"))
+    valid_destination = requests.post(os.path.join(MASTER, f"cd?name={dest_dir}"
+                                                           f"&key={secret_key}"))
     if present and valid_destination:
         resp = requests.put(os.path.join(MASTER, f"mv?source={file}"
-                                                 f"destination={dest_dir}"))
+                                                 f"&destination={dest_dir}"
+                                                 f"&key={secret_key}"))
         verify_response(resp)
     return 1
 
@@ -130,14 +134,17 @@ def copy_file(*args):
     if not fidelity(args, 3):
         return 0
     file = args[1]
-    present = requests.post(os.path.join(MASTER, f"cp?name={file}"))
+    present = requests.post(os.path.join(MASTER, f"cp?name={file}"
+                                                 f"&key={secret_key}"))
     target = args[2]
     tokens = target.split("/")
     dest_dir = ' '.join(map(lambda x: '/' + str(x), tokens))
-    valid_destination = requests.post(os.path.join(MASTER, f"cd?name={dest_dir}"))
+    valid_destination = requests.post(os.path.join(MASTER, f"cd?name={dest_dir}"
+                                                           f"&key={secret_key}"))
     if present and valid_destination:
         resp = requests.put(os.path.join(MASTER, f"cp?source={file}"
-                                                 f"target={target}"))
+                                                 f"target={target}"
+                                                 f"&key={secret_key}"))
         verify_response(resp)
     return 1
 
@@ -151,7 +158,8 @@ def change_dir(*args):
         path = normpath(path)
     else:
         path = normpath(join(working_directory, path))
-    resp = requests.post(os.path.join(MASTER, f"cd?name={path}"))
+    resp = requests.post(os.path.join(MASTER, f"cd?name={path}"
+                                              f"&key={secret_key}"))
     v = verify_response(resp)
     if v:
         working_directory = path
@@ -174,11 +182,13 @@ def download_file(*args):
     if not fidelity(args, 2):
         return 0
     path = args[1]
-    resp = requests.post(os.path.join(MASTER, f"download?filename={path}"))
+    resp = requests.post(os.path.join(MASTER, f"download?filename={path}"
+                                              f"&key={secret_key}"))
     if verify_response(resp):
         response = resp.json()
         datanode = response["nodes"]
-        resp = requests.post(os.path.join(datanode, f"download?filename={path}"))
+        resp = requests.post(os.path.join(datanode, f"download?filename={path}"
+                                                    f"&key={secret_key}"))
         verify_response(resp)
     return 1
 
@@ -187,7 +197,8 @@ def list_dir(*args):
     if not fidelity(args, 2):
         return 0
     global working_directory
-    resp = requests.post(os.path.join(MASTER, f"ls?name={working_directory}"))
+    resp = requests.post(os.path.join(MASTER, f"ls?name={working_directory}"
+                                              f"&key={secret_key}"))
     response = resp.json()
     contents = response["content"]
     for thing in contents:
@@ -199,7 +210,8 @@ def remove_file(*args):
     if not fidelity(args, 2):
         return 0
     file = args[1]
-    resp = requests.put(os.path.join(MASTER, f"remove_file?name={file}"))
+    resp = requests.put(os.path.join(MASTER, f"remove_file?name={file}"
+                                             f"&key={secret_key}"))
     verify_response(resp)
     return 1
 
@@ -208,7 +220,8 @@ def remove_dir(*args):
     if not fidelity(args, 2):
         return 0
     dir = args[1]
-    resp = requests.put(os.path.join(MASTER, f"remove_dir?name={dir}"))
+    resp = requests.put(os.path.join(MASTER, f"remove_dir?name={dir}"
+                                             f"&key={secret_key}"))
     verify_response(resp)
     return 1
 
