@@ -107,6 +107,21 @@ def init():
         fs.add_child(user_folder)
         ss = random.choices(storage_servers, k=3)
         user_folder.set_replicas(ss)
+        for server in user_folder.replicas:
+            port = 9000
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((server, port))
+
+            command = "mkdir"
+
+            sock.send(len(command).to_bytes(1, 'big'))
+            sock.send(command.encode())
+            current_dir = ''
+            sock.send(len(current_dir).to_bytes(1, 'big'))
+            sock.send(current_dir.encode())
+            folder_name = username
+            sock.send(len(folder_name).to_bytes(1, 'big'))
+            sock.send(folder_name.encode())
         return Response(f"User '{username}' was successfully created", status=200)
 
 
