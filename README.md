@@ -30,13 +30,13 @@ docker-compose up
 
 # Description of communication protocols
 ### General queries:  
-* ***TODO*** ```help```                                                      : get information about available commands
-
+* ```help```                                                      : get information about available commands
+![help diagram](https://i.ibb.co/vPKf58S/help.png)
 * ```init <username> <password>```                                : initialization of a new file system under specified username
 ![Init diagram](https://i.ibb.co/X4Fn456/INIT.png)
 * ```login <username> <password>```                               : continue using your filesystem
 ![Login diagram](https://i.ibb.co/28Wnvmm/login.png)
-* ***TODO*** ```exit```                                                      : finish you session
+* ```exit```                                                      : finish you session
 
 ### File queries:
 * ```get <path>/<filename>```                                     : download a file to a local system (reading)
@@ -52,7 +52,8 @@ docker-compose up
 ![MV diagram](https://i.ibb.co/VWvs88S/mv.png)
 
 ### Directory queries:
-* ***TODO*** ```ls```                                                        : list contents of the current working directory
+* ```ls```                                                        : list contents of the current working directory
+![ls diagram](https://i.ibb.co/ssfRXKH/ls.png)
 * ```mkdir <directory>```                                         : create a new directory
 ![MKDIR diagram](https://i.ibb.co/tKbL5QT/mkdir.png)
 * ```cd <destination>```                                          : change current working directory  
