@@ -36,7 +36,27 @@ def client(connection, address):
     print("Speaking with client with address:", address)
     command_size = int.from_bytes(connection.recv(1), 'big') #receive command size
     command = (connection.recv(command_size)).decode() #receive command
-    print("Recieved command:", command)
+    print("Recieved command from client:", command)
+    if(command == "put"):
+        commands.put(connection, address)
+    elif(command == "mkdir"):
+        commands.mkdir(connection, address)
+    elif(command == "replicate"):
+        replication.replicate(connection, address)
+    elif(command == "mv"):
+        commands.mv(connection, address)
+    elif(command == "cp"):
+        commands.cp(connection, address)
+    elif(command == "get"):
+        commands.get(connection, address)
+    return
+
+def naming_server(connection, address):
+    print("Speaking with name server with address:", address)
+    command_size = int.from_bytes(connection.recv(1), 'big') #receive command size
+    command = (connection.recv(command_size)).decode() #receive command
+    print("Recieved command from nameserver:", command)
+
     if(command == "put"):
         commands.put(connection, address)
     elif(command == "mkdir"):
