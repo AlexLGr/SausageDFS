@@ -35,7 +35,7 @@ docker-compose up
 * ```login <username> <password>```                               : continue using your filesystem
 * ```exit```                                                      : finish you session
 
-### File querie:
+### File queries:
 * ```get <path>/<filename>```                                     : download a file to a local system (reading)
 * ```put filename <path>```                                       : put a local file to the filesystem at the specified destination
 * ```touch <path>/<filename>```                                   : ??? It will also support certain directory operations - listing, creation... ??? нужно ли?
