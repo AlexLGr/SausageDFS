@@ -5,6 +5,7 @@ import random
 import requests
 import uuid
 import socket
+from FsTree import FsTree
 
 app = Flask(__name__)
 PORT = 3030
@@ -14,73 +15,8 @@ sessions = {}
 # For storage servers pool
 storage_servers = ['1', '2', '3']
 
-
-class FsTree:
-    def __init__(self, name: str):
-        self.name = name
-        self.path = ""
-        self.address = ""
-        self.replicas = []
-        self.children = []
-        self.sync = False
-
-    def set_path(self, path: str):
-        self.path = path
-
-    def add_child(self, child):
-        if child not in self.children:
-            child.set_path(self.path + child.name)
-            self.children.append(child)
-        return True
-
-    def set_replicas(self, replicas: str):
-        self.replicas = replicas
-        for child in self.children:
-            child.set_replicas(replicas)
-        self.sync = False
-        return True
-
-    def set_address(self, address: str):
-        self.address = address
-
-    def get_child(self, path: str):
-        if path == '':
-            return self
-
-        folders = path.split('/')
-
-        for child in self.children:
-            if child.name == folders[0]:
-                return child.get_child('/'.join(folders[1:]))
-
-        return False
-
-    def list_children(self):
-        for child in self.children:
-            print(child.name)
-
-    def sync(self):
-        if not self.sync:
-            port = 9000
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.address, port))
-
-            command = "sync"
-
-            sock.send(len(command).to_bytes(1, 'big'))
-            sock.send(command.encode())
-
-            sock.send(len(self.path).to_bytes(1, 'big'))
-            sock.send(self.path.encode())
-
-            sock.send(len(self.replicas).to_bytes(1, 'big'))
-
-            for replica in self.replicas:
-                if replica != self.address:
-                    sock.send(replica.encode())
-
-
 fs = FsTree('')
+fs.set_replicas(storage_servers)
 
 
 def check_session(key):
@@ -92,37 +28,6 @@ def check_session(key):
             return False
     else:
         return False
-
-
-@app.route("/init", methods=["PUT"])
-def init():
-    username = request.args["username"]
-    password = request.args["password"]
-    current_users = list(users.keys())
-    if username in current_users:
-        return Response(f"User '{username}' already exists", status=400)
-    else:
-        users[username] = password
-        user_folder = FsTree(username)
-        fs.add_child(user_folder)
-        ss = random.choices(storage_servers, k=3)
-        user_folder.set_replicas(ss)
-        for server in user_folder.replicas:
-            port = 9000
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((server, port))
-
-            command = "mkdir"
-
-            sock.send(len(command).to_bytes(1, 'big'))
-            sock.send(command.encode())
-            current_dir = ''
-            sock.send(len(current_dir).to_bytes(1, 'big'))
-            sock.send(current_dir.encode())
-            folder_name = username
-            sock.send(len(folder_name).to_bytes(1, 'big'))
-            sock.send(folder_name.encode())
-        return Response(f"User '{username}' was successfully created", status=200)
 
 
 @app.route("/login", methods=["PUT"])
@@ -139,6 +44,47 @@ def login():
             return Response(f"Wrong password", status=400)
     else:
         return Response(f"User '{username}' does not exist", status=400)
+
+
+@app.route("/logout", methods=["DELETE"])
+def logout():
+    key = request.args["key"]
+    current_keys = sessions.keys()
+    if key in current_keys:
+        sessions.pop(key)
+        return Response("Your session is now closed, to come back please use 'login' command",
+                        status=200)
+    else:
+        return Response("No session found for your account, please log in", status=400)
+
+
+@app.route("/init", methods=["PUT"])
+def init():
+    username = request.args["username"]
+    password = request.args["password"]
+    current_users = list(users.keys())
+    if username in current_users:
+        return Response(f"User '{username}' already exists", status=400)
+    else:
+        users[username] = password
+        user_folder = FsTree(username)
+        fs.add_child(user_folder)
+        for server in user_folder.replicas:
+            port = 9000
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((server, port))
+
+            command = "mkdir"
+
+            sock.send(len(command).to_bytes(1, 'big'))
+            sock.send(command.encode())
+            current_dir = ''
+            sock.send(len(current_dir).to_bytes(1, 'big'))
+            sock.send(current_dir.encode())
+            folder_name = username
+            sock.send(len(folder_name).to_bytes(1, 'big'))
+            sock.send(folder_name.encode())
+        return Response(f"User '{username}' was successfully created", status=200)
 
 
 @app.route("/mkdir", methods=["PUT"])
@@ -173,22 +119,35 @@ def mkdir():
         return Response("Operation unavailable, please log in first", status=400)
 
 
-@app.route("/logout", methods=["DELETE"])
-def logout():
-    key = int(request.args["key"])
+@app.route("/ls", methods=["POST"])
+def ls():
+    key = request.args["key"]
+    dir_name = request.args["name"]
     current_keys = sessions.keys()
     if key in current_keys:
-        sessions.pop(key)
-        return Response("Your session is now closed, to come back please use 'login' command",
-                        status=200)
-    else:
-        return Response("No session found for your account, please log in", status=400)
+        path = sessions[key][0] + '/' + dir_name
+        temp = fs.get_child(path)
+        if temp:
+            return {
+                'content': temp.list_children()
+            }
+        else:
+            return Response("Wrong directory", status=404)
+    return Response("No session found for your account, please log in", status=400)
 
 
-@app.route("/upload", methods=["POST"])
-def upload():
-    # получишь файл в переменной filename, отправишь лист IP серверов готовых принять файл в json
-    return Response("")
+@app.route("/cd", methods=["POST"])
+def change_dir():
+    key = request.args["key"]
+    dir_name = request.args["name"]
+    current_keys = sessions.keys()
+    if key in current_keys:
+        path = sessions[key][0] + '/' + dir_name
+        if fs.get_child(path):
+            return Response("Directory was changed", status=200)
+        else:
+            return Response("No such directory was found", status=404)
+    return Response("No session found for your account, please log in", status=400)
 
 
 @app.route("/mv", methods=["PUT"])
@@ -201,42 +160,155 @@ def move():
 def copy():
     if request.method == "POST":
         # получишь название файла в переменной name, проверь есть ли он в системе
-        pass
+        key = request.args["key"]
+        current_keys = sessions.keys()
+        if key in current_keys:
+            path = sessions[key][0] + '/' + request.args['name']
+            if fs.get_child(path):
+                return True
+            else:
+                return Response("File was not found", status=404)
+        else:
+            Response("No session found for your account, please log in", status=400)
     if request.method == "PUT":
+        key = request.args["key"]
+        current_keys = sessions.keys()
+        if key in current_keys:
+            path = sessions[key][0] + '/' + request.args['source']
+            cpto = sessions[key][0] + '/' + request.args['target']
+            filename = path.split('/')[-1]
+            temp = fs.get_child(path)
+
+            if temp:
+                server = temp.address
+
+                port = 9000
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((server, port))
+
+                command = "cp"
+
+                sock.send(len(command).to_bytes(1, 'big'))
+                sock.send(command.encode())
+
+                sock.send(len(path).to_bytes(1, 'big'))
+                sock.send(path.encode())
+
+                sock.send(len(cpto).to_bytes(1, 'big'))
+                sock.send(cpto.encode())
+
+                new_parent = fs.get_child(cpto)
+                new_parent.add_child(FsTree(filename))
+        else:
+            Response("No session found for your account, please log in", status=400)
         # получишь название файла в переменной source, файл куда копировать
         # в переменной destination
         pass
     return Response("")
 
 
-@app.route("/cd", methods=["POST"])
-def change_dir():
-    # получишь название директории в name
-    return Response("")
-
-
 @app.route("/download", methods=["POST"])
 def download():
-    # получишь название файла в filename, вернешь IP сервера в json
-    return Response("")
+    path = request.args["name"]
+    key = request.args["key"]
+    current_keys = sessions.keys()
+    if key in current_keys:
+        path = sessions[key][0] + '/' + path
+        temp = fs.get_child(path)
+        if temp:
+            if temp.sync:
+                return {
+                    'nodes': random.choice(temp.replicas)
+                }
+            else:
+                return {
+                    'nodes': temp.address
+                }
+        else:
+            return Response("No such file was found", status=404)
+    return Response("No session found for your account, please log in", status=400)
 
 
-@app.route("/ls", methods=["POST"])
-def ls():
-    # получишь директорию в name, вереншь лист детей в json
+@app.route("/upload", methods=["POST"])
+def upload():
+    # получишь файл в переменной filename, отправишь лист IP серверов готовых принять файл в json
+
     return Response("")
 
 
 @app.route("/remove_file", methods=["PUT"])
 def remove_file():
-    # получишь файл в name
-    return Response("")
+    key = request.args["key"]
+    if check_session(key):
+        file_path = sessions[key][0] + '/' + request.args["name"]
+        temp = fs.get_child(file_path)
+        if temp:
+            folders = file_path.split('/')
+
+            path = '/'.join(folders[:-1])
+            filename = folders[-1]
+
+            for server in temp.replicas:
+                port = 9000
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((server, port))
+
+                command = "rm"
+
+                sock.send(len(command).to_bytes(1, 'big'))
+                sock.send(command.encode())
+
+                sock.send(len(path).to_bytes(1, 'big'))
+                sock.send(path.encode())
+
+                sock.send(len(filename).to_bytes(1, 'big'))
+                sock.send(filename.encode())
+
+            print(path)
+            if fs.get_child(path).remove_child(filename):
+                print("ADADASDASD")
+
+            return Response("File was successfully deleted", status=200)
+        else:
+            return Response("File was not found", status=404)
+    else:
+        return Response("Operation unavailable, please log in first", status=400)
 
 
 @app.route("/remove_dir", methods=["PUT"])
 def remove_dir():
-    # получишь директорию в name
-    return Response("")
+    key = request.args["key"]
+    if check_session(key):
+        folderpath = sessions[key][0] + '/' + request.args["name"]
+        temp = fs.get_child(folderpath)
+        if temp:
+            folders = folderpath.split('/')
+
+            path = '/'.join(folders[:-1])
+            foldername = folders[-1]
+
+            for server in temp.replicas:
+                port = 9000
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((server, port))
+
+                command = "rmd"
+
+                sock.send(len(command).to_bytes(1, 'big'))
+                sock.send(command.encode())
+
+                sock.send(len(folderpath).to_bytes(1, 'big'))
+                sock.send(folderpath.encode())
+
+            print(path)
+            if fs.get_child(path).remove_child(foldername):
+                print("ADADASDASD")
+
+            return Response("Directory was successfully deleted", status=200)
+        else:
+            return Response("Directory was not found", status=404)
+    else:
+        return Response("Operation unavailable, please log in first", status=400)
 
 
 if __name__ == "__main__":

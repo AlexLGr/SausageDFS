@@ -194,7 +194,7 @@ def download_file(*args):
 
 
 def list_dir(*args):
-    if not fidelity(args, 2):
+    if not fidelity(args, 1):
         return 0
     global working_directory
     resp = requests.post(os.path.join(MASTER, f"ls?name={working_directory}"
