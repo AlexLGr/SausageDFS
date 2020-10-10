@@ -31,11 +31,13 @@ docker-compose up
 # Description of communication protocols
 ### General queries:  
 * ```help```                                                      : get information about available commands
+***TODO***
 * ```init <username> <password>```                                : initialization of a new file system under specified username
 ![Init diagram](https://i.ibb.co/X4Fn456/INIT.png)
 * ```login <username> <password>```                               : continue using your filesystem
 ![Login diagram](https://i.ibb.co/28Wnvmm/login.png)
 * ```exit```                                                      : finish you session
+***TODO***
 
 ### File queries:
 * ```get <path>/<filename>```                                     : download a file to a local system (reading)
@@ -43,6 +45,7 @@ docker-compose up
 * ```put filename <path>```                                       : put a local file to the filesystem at the specified destination
 ![Put diagram](https://i.ibb.co/SBMhcnP/put.png)
 * ??? ```touch <path>/<filename>```                               : ??? It will also support certain directory operations - listing, creation... ???
+***TODO***
 * ```rm <path>/<filename>```                                      : remove a specified file
 ![RM diagram]()
 * ```cp <path from>/<filename> <path to>/<filename>```            : copy the content of the file to the different target file
@@ -52,8 +55,10 @@ docker-compose up
 
 ### Directory queries:
 * ```ls```                                                        : list contents of the current working directory
+***TODO***
 * ```mkdir <directory>```                                         : create a new directory
+***TODO***
 ![MKDIR diagram](https://i.ibb.co/tKbL5QT/mkdir.png)
 * ```cd <destination>```                                          : change current working directory  
 * ```rmd <directory>```                                           : remove a directory
-<font size="30">Description</font>
+***TODO***
