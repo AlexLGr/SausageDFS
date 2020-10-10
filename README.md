@@ -8,7 +8,7 @@ Distributed file system implementation.
 * Installed Docker Compose
 
 ### Client
-*Clone docker-compose file for client from GitHub repository
+* Clone docker-compose file for client from GitHub repository
 * run docker-compose 
 ```
 docker-compose up
@@ -25,5 +25,5 @@ docker-compose up
 ```
 docker-compose up
 ```
-# Architectural diagrams
+# Architectural diagram
 ![Architecture diagram](https://i.ibb.co/m4SrnHb/123456.png)
