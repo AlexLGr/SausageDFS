@@ -44,7 +44,7 @@ docker-compose up
 * ```put filename <path>```                                       : put a local file to the filesystem at the specified destination
 ![Put diagram](https://i.ibb.co/SBMhcnP/put.png)
 * ***TODO*** ??? ```touch <path>/<filename>```                               : ??? It will also support certain directory operations - listing, creation... ???
-* ```rm <path>/<filename>```                                      : remove a specified file
+* ***TODO*** ```rm <path>/<filename>```                                      : remove a specified file
 ![RM diagram]()
 * ```cp <path from>/<filename> <path to>/<filename>```            : copy the content of the file to the different target file
 ![CP diagram](https://i.ibb.co/thPST39/cp.png)
@@ -53,7 +53,7 @@ docker-compose up
 
 ### Directory queries:
 * ***TODO*** ```ls```                                                        : list contents of the current working directory
-* ***TODO*** ```mkdir <directory>```                                         : create a new directory
+* ```mkdir <directory>```                                         : create a new directory
 ![MKDIR diagram](https://i.ibb.co/tKbL5QT/mkdir.png)
-* ```cd <destination>```                                          : change current working directory  
+* ***TODO*** ```cd <destination>```                                          : change current working directory  
 * ***TODO*** ```rmd <directory>```                                           : remove a directory
