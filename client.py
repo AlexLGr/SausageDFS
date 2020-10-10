@@ -93,14 +93,13 @@ def upload_file(*args):
         destination = normpath(join(working_directory, destination))
     filename = os.path.basename(filepath)
     path = join(destination, filename)
-    resp = requests.post(os.path.join(MASTER, f"files?filename={path}"))
+    resp = requests.post(os.path.join(MASTER, f"upload?filename={path}"))
     v = verify_response(resp)
     if v:
         response = resp.json()
         datanodes = response["nodes"]
-        file_id = response["file_id"]
         for node in datanodes:
-            resp = requests.post(join(node, f'file?id={file_id}'), data=file)
+            resp = requests.put(join(node, f'upload?filename={path}'), data=file)
             v = verify_response(resp)
             if v:
                 return 1
@@ -112,10 +111,34 @@ def upload_file(*args):
 
 
 def move_file(*args):
+    if not fidelity(args, 3):
+        return 0
+    file = args[1]
+    present = requests.post(os.path.join(MASTER, f"cp?name={file}"))
+    destination = args[2]
+    tokens = destination.split("/")
+    dest_dir = ' '.join(map(lambda x: '/' + str(x), tokens))
+    valid_destination = requests.post(os.path.join(MASTER, f"cd?name={dest_dir}"))
+    if present and valid_destination:
+        resp = requests.put(os.path.join(MASTER, f"mv?source={file}"
+                                                 f"destination={dest_dir}"))
+        verify_response(resp)
     return 1
 
 
 def copy_file(*args):
+    if not fidelity(args, 3):
+        return 0
+    file = args[1]
+    present = requests.post(os.path.join(MASTER, f"cp?name={file}"))
+    target = args[2]
+    tokens = target.split("/")
+    dest_dir = ' '.join(map(lambda x: '/' + str(x), tokens))
+    valid_destination = requests.post(os.path.join(MASTER, f"cd?name={dest_dir}"))
+    if present and valid_destination:
+        resp = requests.put(os.path.join(MASTER, f"cp?source={file}"
+                                                 f"target={target}"))
+        verify_response(resp)
     return 1
 
 
@@ -128,7 +151,7 @@ def change_dir(*args):
         path = normpath(path)
     else:
         path = normpath(join(working_directory, path))
-    resp = requests.post(os.path.join(MASTER, f"dir?name={path}"))
+    resp = requests.post(os.path.join(MASTER, f"cd?name={path}"))
     v = verify_response(resp)
     if v:
         working_directory = path
@@ -148,18 +171,45 @@ def create_dir(*args):
 
 
 def download_file(*args):
+    if not fidelity(args, 2):
+        return 0
+    path = args[1]
+    resp = requests.post(os.path.join(MASTER, f"download?filename={path}"))
+    if verify_response(resp):
+        response = resp.json()
+        datanode = response["nodes"]
+        resp = requests.post(os.path.join(datanode, f"download?filename={path}"))
+        verify_response(resp)
     return 1
 
 
 def list_dir(*args):
+    if not fidelity(args, 2):
+        return 0
+    global working_directory
+    resp = requests.post(os.path.join(MASTER, f"ls?name={working_directory}"))
+    response = resp.json()
+    contents = response["content"]
+    for thing in contents:
+        print(thing)
     return 1
 
 
 def remove_file(*args):
+    if not fidelity(args, 2):
+        return 0
+    file = args[1]
+    resp = requests.put(os.path.join(MASTER, f"remove_file?name={file}"))
+    verify_response(resp)
     return 1
 
 
 def remove_dir(*args):
+    if not fidelity(args, 2):
+        return 0
+    dir = args[1]
+    resp = requests.put(os.path.join(MASTER, f"remove_dir?name={dir}"))
+    verify_response(resp)
     return 1
 
 
@@ -174,7 +224,7 @@ def display_help(*args):
         "put <file> <destination>     : put a local file to the filesystem at the specified destination\n"
         "cd <destination>             : change current working directory\n"
         "mkdir <directory>            : create a new directory\n"
-        "get <file> <destination>     : download a file to a local system\n"
+        "get <file>                   : download a file to a local system\n"
         "ls                           : list contents of the current working directory\n"
         "rm <file>                    : remove a specified file\n"
         "rmd <destination>            : remove a directory\n"
