@@ -49,6 +49,10 @@ def client(connection, address):
         commands.cp(connection, address)
     elif(command == "get"):
         commands.get(connection, address)
+    elif(command == "rm"):
+        commands.rm(connection, address)
+    elif(command == "rmd"):
+        commands.rmd(connection, address)
     return
 
 def naming_server(connection, address):

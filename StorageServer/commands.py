@@ -4,14 +4,12 @@ import sys
 import os
 
 def put(connection, address):
-    path = int.from_bytes(connection.recv(1), 'big') #receive  path size
-    path = (connection.recv(virtual_path_size)).decode() #receive  path
+    path_size = int.from_bytes(connection.recv(1), 'big') #receive  path size
+    path = (connection.recv(path_size)).decode() #receive  path
     print("Recieved path:", path)
 
     filename_size = int.from_bytes(connection.recv(1), 'big') #receive filename size
     filename = (connection.recv(filename_size)).decode() #receive filename
-
-
     print("Received file with name:", filename)
 
     if os.path.exists(absolute_path(path)):
@@ -112,6 +110,42 @@ def get(connection, address):
     else:
         print("Failed.")
     return
+
+def rm(connection, address):
+    path_size = int.from_bytes(connection.recv(1), 'big') #receive  path size
+    path = (connection.recv(path_size)).decode() #receive  path
+    print("Recieved path:", path)
+
+    filename_size = int.from_bytes(connection.recv(1), 'big') #receive filename size
+    filename = (connection.recv(filename_size)).decode() #receive filename
+    print("Received file with name:", filename)
+
+    if os.path.exists(absolute_path(path)):
+        try:
+            os.system(f'rm {path}{filename}')
+            return
+        except:
+            print(f'Unable to remove file {filename}')
+            return f'Unable to remove file {filename}'
+    else:
+        print(f'Path {path} is not exist.')
+        return f'Path {path} is not exist.'
+
+def rmd(connection, address):
+    path_size = int.from_bytes(connection.recv(1), 'big') #receive  path size
+    path = (connection.recv(path_size)).decode() #receive  path
+    print("Recieved path:", path)
+
+    if os.path.exists(absolute_path(path)):
+        try:
+            os.system(f'rmdir {path}')
+            return
+        except:
+            print(f'Unable to remove {path}')
+            return f'Unable to remove file {path}'
+    else:
+        print(f'Path {path} is not exist.')
+        return f'Path {path} is not exist.'
 
 def absolute_path(path):
     return os.path.abspath(os.getcwd()) + "/" + path
