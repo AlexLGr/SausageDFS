@@ -34,7 +34,7 @@ docker-compose up
 "login <username>             : continue using your filesystem\n"
 "exit
 
-```file reading, get
+```file reading, get```
 writing,  put 
 creation, touch????
 deletion, rm
