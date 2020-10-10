@@ -29,20 +29,22 @@ docker-compose up
 ![Architecture diagram](https://i.ibb.co/m4SrnHb/123456.png)
 
 # Description of communication protocols
-"help                         : get information about available commands\n"
-"init <username> <password>   : initialization of a new file system under specified username\n"
-"login <username>             : continue using your filesystem\n"
-"exit
+### General queries:  
+```help```                                                      : get information about available commands
+```init <username> <password>```                                : initialization of a new file system under specified username
+```login <username> <password>```                               : continue using your filesystem
+```exit```                                                      : finish you session
 
-```file reading, get```
-writing,  put 
-creation, touch????
-deletion, rm
-copy, cp
-moving mv
-info queries  
-It will also support certain directory operations 
-listing,  ls
-creation mkdir 
-changing  cd
-deletion rmd
+### File querie:
+```get <path>/<filename>```                                     : download a file to a local system (reading)
+```put filename <path>```                                       : put a local file to the filesystem at the specified destination
+```touch <path>/<filename>```                                   : ??? It will also support certain directory operations - listing, creation... ??? нужно ли?
+```rm <path>/<filename>```                                      : remove a specified file
+```cp <path from>/<filename> <path to>/<filename>```            : copy the content of the file to the different target file
+```mv <path from>/<filename> <path to>/<filename>```            : move a file to the new destination
+
+### Directory queries:
+```ls```                                                        : list contents of the current working directory
+```mkdir <directory>```                                         : create a new directory
+```cd <destination>```                                          : change current working directory  
+```rmd <directory>```                                           : remove a directory
