@@ -48,7 +48,7 @@ docker-compose up
 * ```cp <path from>/<filename> <path to>/<filename>```            : copy the content of the file to the different target file
 ![Login diagram]()
 * ```mv <path from>/<filename> <path to>/<filename>```            : move a file to the new destination
-![Login diagram]()
+![Login diagram](https://i.ibb.co/VWvs88S/mv.png)
 
 ### Directory queries:
 * ```ls```                                                        : list contents of the current working directory
