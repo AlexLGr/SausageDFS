@@ -31,7 +31,6 @@ docker-compose up
 # Description of communication protocols
 ### General queries:  
 * ```help```                                                      : get information about available commands
-![help diagram](https://i.ibb.co/vPKf58S/help.png)
 * ```init <username> <password>```                                : initialization of a new file system under specified username
 ![Init diagram](https://i.ibb.co/X4Fn456/INIT.png)
 * ```login <username> <password>```                               : continue using your filesystem
