@@ -55,6 +55,7 @@ docker-compose up
 * ***TODO*** ```ls```                                                        : list contents of the current working directory
 * ```mkdir <directory>```                                         : create a new directory
 ![MKDIR diagram](https://i.ibb.co/tKbL5QT/mkdir.png)
-* ***TODO*** ```cd <destination>```                                          : change current working directory  
+* ```cd <destination>```                                          : change current working directory  
+![CD diagram](https://i.ibb.co/MRp3yG9/cd.png)
 * ```rmd <directory>```                                           : remove a directory
 ![rmd diagram](https://i.ibb.co/TbKD94h/rmd.png)
