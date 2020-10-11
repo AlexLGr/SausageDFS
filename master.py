@@ -128,9 +128,9 @@ def ls():
         path = sessions[key][0] + '/' + dir_name
         temp = fs.get_child(path)
         if temp:
-            return {
+            return Response({
                 'content': temp.list_children()
-            }
+            }, status=200)
         else:
             return Response("Wrong directory", status=404)
     return Response("No session found for your account, please log in", status=400)
@@ -152,8 +152,52 @@ def change_dir():
 
 @app.route("/mv", methods=["PUT"])
 def move():
+    if request.method == "POST":
+        # получишь название файла в переменной name, проверь есть ли он в системе
+        key = request.args["key"]
+        current_keys = sessions.keys()
+        if key in current_keys:
+            path = sessions[key][0] + '/' + request.args['name']
+            if fs.get_child(path):
+                return Response("File was found", status=200)
+            else:
+                return Response("File was not found", status=404)
+        else:
+            Response("No session found for your account, please log in", status=400)
+    if request.method == "PUT":
+        key = request.args["key"]
+        current_keys = sessions.keys()
+        if key in current_keys:
+            path = sessions[key][0] + '/' + request.args['source']
+            cpto = sessions[key][0] + '/' + request.args['destination']
+            filename = path.split('/')[-1]
+            temp = fs.get_child(path)
 
-    # получишь файл в переменной source, конечный путь в destination
+            if temp:
+                server = temp.address
+
+                port = 9000
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((server, port))
+
+                command = "mv"
+
+                sock.send(len(command).to_bytes(1, 'big'))
+                sock.send(command.encode())
+
+                sock.send(len(path).to_bytes(1, 'big'))
+                sock.send(path.encode())
+
+                sock.send(len(cpto).to_bytes(1, 'big'))
+                sock.send(cpto.encode())
+
+                new_parent = fs.get_child(cpto)
+                new_parent.add_child(FsTree(filename))
+        else:
+            Response("No session found for your account, please log in", status=400)
+        # получишь название файла в переменной source, файл куда копировать
+        # в переменной destination
+        pass
     return Response("")
 
 
@@ -166,7 +210,7 @@ def copy():
         if key in current_keys:
             path = sessions[key][0] + '/' + request.args['name']
             if fs.get_child(path):
-                return True
+                return Response("File was found", status=200)
             else:
                 return Response("File was not found", status=404)
         else:
@@ -218,13 +262,14 @@ def download():
         temp = fs.get_child(path)
         if temp:
             if temp.sync:
-                return {
+                return Response({
                     'nodes': random.choice(temp.replicas)
-                }
+                }, status=200)
+
             else:
-                return {
+                return Response({
                     'nodes': temp.address
-                }
+                }, status=200)
         else:
             return Response("No such file was found", status=404)
     return Response("No session found for your account, please log in", status=400)
@@ -233,7 +278,16 @@ def download():
 @app.route("/upload", methods=["POST"])
 def upload():
     # получишь файл в переменной filename, отправишь лист IP серверов готовых принять файл в json
-
+    key = request.args["key"]
+    current_keys = sessions.keys()
+    if key in current_keys:
+        path = request.args["path"]
+        file = request.args["file"]
+        temp = fs.get_child(path)
+        if temp:
+            return Response({
+                'nodes': temp.address
+            }, status=200)
     return Response("")
 
 
