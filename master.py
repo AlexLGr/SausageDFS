@@ -152,6 +152,7 @@ def change_dir():
 
 @app.route("/mv", methods=["PUT"])
 def move():
+
     # получишь файл в переменной source, конечный путь в destination
     return Response("")
 
