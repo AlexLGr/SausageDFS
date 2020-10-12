@@ -160,7 +160,10 @@ def move():
         filename = old_path.split('/')[-1]
         old_fs = fs.get_child(old_path)
         new_fs = fs.get_child(new_path)
+
         if old_fs and new_fs:
+            old_fs.sync()
+
             new_fs.add_child(FsTree(filename))
             for server in new_fs.replicas:
                 port = 9000
@@ -197,6 +200,7 @@ def copy():
         old_fs = fs.get_child(old_path)
         new_fs = fs.get_child(new_path)
         if old_fs and new_fs:
+            old_fs.sync()
             new_fs.add_child(FsTree(filename))
 
             if old_fs.sync:
