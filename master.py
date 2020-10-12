@@ -215,17 +215,23 @@ def copy():
                 return Response("File was not found", status=404)
         else:
             Response("No session found for your account, please log in", status=400)
+
     if request.method == "PUT":
         key = request.args["key"]
         current_keys = sessions.keys()
         if key in current_keys:
-            path = sessions[key][0] + '/' + request.args['source']
-            cpto = sessions[key][0] + '/' + request.args['target']
-            filename = path.split('/')[-1]
-            temp = fs.get_child(path)
+            old_path = sessions[key][0] + '/' + request.args['source']
+            new_path = sessions[key][0] + '/' + request.args['target']
+            filename = old_path.split('/').[-1]
+            old_fs = fs.get_child(old_path)
+            new_fs = fs.get_child(new_path)
+            if old_fs and new_fs:
+                new_fs.add_child(FsTree(filename))
 
-            if temp:
-                server = temp.address
+                if old_fs.sync:
+                    server = random.choice(old_fs.replicas)
+                else:
+                    server = old_fs.address
 
                 port = 9000
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -236,19 +242,12 @@ def copy():
                 sock.send(len(command).to_bytes(1, 'big'))
                 sock.send(command.encode())
 
-                sock.send(len(path).to_bytes(1, 'big'))
-                sock.send(path.encode())
+                sock.send(len(old_path).to_bytes(1, 'big'))
+                sock.send(old_path.encode())
 
-                sock.send(len(cpto).to_bytes(1, 'big'))
-                sock.send(cpto.encode())
+                sock.send(len(new_path).to_bytes(1, 'big'))
+                sock.send(new_path.encode())
 
-                new_parent = fs.get_child(cpto)
-                new_parent.add_child(FsTree(filename))
-        else:
-            Response("No session found for your account, please log in", status=400)
-        # получишь название файла в переменной source, файл куда копировать
-        # в переменной destination
-        pass
     return Response("")
 
 
@@ -285,8 +284,10 @@ def upload():
         file = request.args["file"]
         temp = fs.get_child(path)
         if temp:
+            temp.add_child(FsTree(file))
+
             return Response({
-                'nodes': temp.address
+                'nodes': random.choice(temp.get_child(file).address)
             }, status=200)
     return Response("")
 
