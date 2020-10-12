@@ -92,8 +92,11 @@ def upload_file(*args):
     else:
         destination = normpath(join(working_directory, destination))
     filename = os.path.basename(filepath)
+    split = filepath.split("/")
+    dest_dir = ' '.join(map(lambda x: '/' + str(x), split))
     path = join(destination, filename)
     resp = requests.post(os.path.join(MASTER, f"upload?filename={path}"
+                                              f"&path={dest_dir}"
                                               f"&key={secret_key}"))
     v = verify_response(resp)
     if v:
@@ -241,6 +244,7 @@ def display_help(*args):
         "ls                           : list contents of the current working directory\n"
         "rm <file>                    : remove a specified file\n"
         "rmd <destination>            : remove a directory\n"
+        "touch <filename>             : create a new file with the name filename\n"
         "exit                         : finish you session")
     return 1
 
@@ -258,7 +262,8 @@ commands = {
     "get": download_file,
     "ls": list_dir,
     "rm": remove_file,
-    "rmd": remove_dir
+    "rmd": remove_dir,
+    "touch": create_dir
 }
 
 
