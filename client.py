@@ -90,36 +90,23 @@ def upload_file(*args):
     except OSError as e:
         print(e)
         return 0
-#    if isabs(destination):
-#        destination = normpath(destination)
-#    else:
-#        destination = normpath(join(working_directory, destination))
     filename = os.path.basename(filepath)
-#    split = destination.split("/")
-#    dest_dir = ' '.join(map(lambda x: '/' + str(x), split))
-#    path = join(destination, filename)
-    print("I AM HERE")
     resp = requests.post(os.path.join(MASTER, f"upload?filename={filename}"
                                               f"&path={destination}"
                                               f"&key={secret_key}"))
-    print("я жив")
-    v = verify_response(resp)
-    if v:
-        response = resp.json()
-        datanodes = response["nodes"]
-        print("DATANODES ARE" + datanodes)
+    response = resp.json()
+    datanodes = response["nodes"]
+    print(datanodes)
+    global user
+    destination = user + "/" + destination
+    for node in datanodes:
         port = 10001
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((datanodes, port))
+        sock.connect((node, port))
 
         sock.sendall(len("put").to_bytes(1, 'big')) #sending command
         sock.sendall(str("put").encode())
 
-        global user
-        if(working_directory == ""):
-            destination = user + "/" + destination
-        else:
-            destination = working_directory + "/" + destination
 
         sock.sendall(len(destination).to_bytes(1, 'big')) #sending path
         sock.sendall(str(destination).encode())
@@ -139,7 +126,6 @@ def upload_file(*args):
                     break
                 sock.sendall(buf)
                 sent += len(buf)
-            sock.close()
             print("Finished!")
         else:
             print("Failed.")
@@ -168,7 +154,7 @@ def copy_file(*args):
     if not fidelity(args, 3):
         return 0
     file = args[1]
-    present = requests.post(os.path.join(MASTER, f"cp?name={file}"
+    present = requests.post(os.path.join(MASTER, f"cd?name={file}"
                                                  f"&key={secret_key}"))
     target = args[2]
     tokens = target.split("/")
@@ -218,13 +204,33 @@ def download_file(*args):
     path = args[1]
     resp = requests.post(os.path.join(MASTER, f"download?filename={path}"
                                               f"&key={secret_key}"))
-    if verify_response(resp):
-        response = resp.json()
-        datanode = response["nodes"]
-        resp = requests.post(os.path.join(datanode, f"download?filename={path}"
-                                                    f"&key={secret_key}"))
-        verify_response(resp)
-    return 1
+    response = resp.json()
+    datanode = response["nodes"]
+    print(datanode)
+    global user
+    path = user + "/" + path
+    port = 10001
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((datanode, port))
+
+    sock.sendall(len("get").to_bytes(1, 'big')) #sending command
+    sock.sendall(str("get").encode())
+    sock.sendall(len(path).to_bytes(1, 'big')) #sending path
+    sock.sendall(str(path).encode())
+
+    localpath = path.split("/")[-1]
+    print(localpath)
+    file = open(f'{localpath}', "wb")
+    print("жив2")
+    while True:
+        data = sock.recv(1024)
+        if not data:
+            print("break")
+            break
+        file.write(data)
+    file.close()
+    sock.close()
+    print("Received file with name:", localpath)
 
 
 def list_dir(*args):
