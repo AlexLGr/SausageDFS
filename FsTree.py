@@ -14,6 +14,9 @@ class FsTree:
     def set_path(self, path: str):
         self.path = path
 
+    def set_sync(self, value: bool):
+        self.sync = value
+
     def add_child(self, child):
         if child not in self.children:
             child.set_path(self.path + child.name)
