@@ -13,7 +13,7 @@ DEBUG = True
 users = {}
 sessions = {}
 # For storage servers pool
-storage_servers = ['1', '2', '3']
+storage_servers = ['localhost', 'localhost', 'localhost']
 
 fs = FsTree('')
 fs.set_replicas(storage_servers)
@@ -69,7 +69,7 @@ def init():
         user_folder = FsTree(username)
         fs.add_child(user_folder)
         for server in user_folder.replicas:
-            port = 9000
+            port = 10000
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((server, port))
 
@@ -97,7 +97,7 @@ def mkdir():
         if temp:
             temp.add_child(FsTree(folder_name))
             for server in temp.replicas:
-                port = 9000
+                port = 10000
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((server, port))
 
@@ -166,7 +166,7 @@ def move():
 
             new_fs.add_child(FsTree(filename))
             for server in new_fs.replicas:
-                port = 9000
+                port = 10000
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((server, port))
 
@@ -211,7 +211,7 @@ def copy():
                 server = old_fs.address
                 new_fs.get_child(filename).set_address(server)
 
-            port = 9000
+            port = 10000
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((server, port))
 
@@ -266,7 +266,7 @@ def upload():
         temp = fs.get_child(path)
         if temp:
             temp.add_child(FsTree(file))
-            temp.get_child(file).set_sync(True)
+
             return jsonify({
                 'nodes': temp.get_child(file).replicas
             })
@@ -274,7 +274,6 @@ def upload():
             return Response("No such directory was found", status=404)
     else:
         return Response("Operation unavailable, please log in first", status=400)
-
 
 @app.route("/remove_file", methods=["PUT"])
 def remove_file():
@@ -289,7 +288,7 @@ def remove_file():
             filename = folders[-1]
 
             for server in temp.replicas:
-                port = 9000
+                port = 10000
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((server, port))
 
@@ -326,7 +325,7 @@ def remove_dir():
             foldername = folders[-1]
 
             for server in temp.replicas:
-                port = 9000
+                port = 10000
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((server, port))
 
