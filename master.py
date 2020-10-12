@@ -266,6 +266,8 @@ def upload():
             return jsonify({
                 'nodes': temp.get_child(file).address
             })
+        else:
+            return Response("No such directory was found", status=404)
     else:
         return Response("Operation unavailable, please log in first", status=400)
 
