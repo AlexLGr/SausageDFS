@@ -1,6 +1,10 @@
 # [F20] Distributed Systems Project 2
 Distributed file system implementation.
 ### Team: Sausage Party
+### Member contributions: 
+    Zhandos - master node code
+    Kamil - server sode
+    Alexandr - client code
 
 # How to launch the system:
 ### Prerequisite requirements
