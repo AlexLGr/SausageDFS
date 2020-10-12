@@ -185,8 +185,9 @@ def move():
 
             old_parent = old_path.split('/')[:-1]
             fs.get_child(old_parent).remove_child(filename)
+        return Response("No such directory was found", status=404)
     else:
-        Response("No session found for your account, please log in", status=400)
+        return Response("No session found for your account, please log in", status=400)
 
 
 @app.route("/cp", methods=["POST"])
@@ -225,8 +226,9 @@ def copy():
             sock.send(new_path.encode())
 
             new_fs.get_child(filename).sync()
+        return Response("No such directory was found", status=404)
     else:
-        Response("No session found for your account, please log in", status=400)
+        return Response("No session found for your account, please log in", status=400)
 
 
 @app.route("/download", methods=["POST"])
