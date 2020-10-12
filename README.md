@@ -2,8 +2,8 @@
 Distributed file system implementation.
 ### Team: Sausage Party
 ### Member contributions: 
-    Zhandos - master node code
-    Kamil - server sode
+    Zhandos - master node code (naming server)
+    Kamil - storage server sode 
     Alexandr - client code
 
 # How to launch the system:

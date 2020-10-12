@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 from os.path import isabs, join, normpath
+import socket
 
 working_directory = ""
 # TODO: change master address to the real thing
@@ -9,6 +10,7 @@ MASTER = os.getenv("MASTER", "http://localhost:3030/")
 user = ""
 password = ""
 secret_key = "-1"
+SEPARATOR = "<SEPARATOR>"
 
 
 def fidelity(args, amount):
@@ -70,7 +72,8 @@ def login(*args):
     )
     v = verify_response(resp)
     if v:
-        global secret_key
+        global secret_key, user
+        user = username
         secret_key = resp.content.decode()
         return 1
     else:
@@ -92,20 +95,22 @@ def upload_file(*args):
     else:
         destination = normpath(join(working_directory, destination))
     filename = os.path.basename(filepath)
+    split = filepath.split("/")
+    dest_dir = ' '.join(map(lambda x: '/' + str(x), split))
     path = join(destination, filename)
     resp = requests.post(os.path.join(MASTER, f"upload?filename={path}"
+                                              f"&path={dest_dir}"
                                               f"&key={secret_key}"))
     v = verify_response(resp)
     if v:
         response = resp.json()
         datanodes = response["nodes"]
         for node in datanodes:
-            resp = requests.put(join(node, f"upload?filename={path}"), data=file)
-            v = verify_response(resp)
-            if v:
-                return 1
-            else:
-                return 0
+            port = 9000
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((node, port))
+            sock.send(f"{filename}".encode())
+            sock.send(file)
         return 1
     else:
         return 0
@@ -241,6 +246,7 @@ def display_help(*args):
         "ls                           : list contents of the current working directory\n"
         "rm <file>                    : remove a specified file\n"
         "rmd <destination>            : remove a directory\n"
+        "touch <filename>             : create a new file with the name filename\n"
         "exit                         : finish you session")
     return 1
 
@@ -258,7 +264,8 @@ commands = {
     "get": download_file,
     "ls": list_dir,
     "rm": remove_file,
-    "rmd": remove_dir
+    "rmd": remove_dir,
+    "touch": create_dir
 }
 
 
