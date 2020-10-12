@@ -11,22 +11,18 @@ def put(connection, address):
     filename_size = int.from_bytes(connection.recv(1), 'big') #receive filename size
     filename = (connection.recv(filename_size)).decode() #receive filename
     print("Received file with name:", filename)
+    print(f'{path}/{filename}', "wb")
 
-    if os.path.exists(absolute_path(path)):
-        try:
-            file = open(f'{virtual_path}{filename}', "wb")
-            while True:
-                data = connection.recv(1024)
-                if not data:
-                    break
-                file.write(data)
-            print(f'put {filename} to /{virtual_path}/ successful')
-            file.close()
-            return
-        except:
-            return f'Unable to put file to {path}'
-    else:
-        return f'Path {path} is not exist.'
+
+    file = open(f'{path}/{filename}', "wb")
+
+    while True:
+        data = connection.recv(1024)
+        if not data:
+            break
+        file.write(data)
+    print("Received file with name:", filename)
+
 
 def mkdir(connection, address):
     path_size = int.from_bytes(connection.recv(1), 'big') #receive path size
@@ -39,7 +35,10 @@ def mkdir(connection, address):
 
     if os.path.exists(absolute_path(path)):
         try:
-            os.system(f'mkdir {path}{dirname}')
+            if path == "":
+                os.system(f'mkdir {path}{dirname}')
+            else:
+                os.system(f'mkdir {path}/{dirname}')
             return
         except:
             print(f'Unable to make directory with path {path}')
@@ -89,23 +88,24 @@ def cp(connection, address):
         return f'Path {to_path} is not exist.'
 
 
-### GET NOT WORKING!
 def get(connection, address):
-    virtual_path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
-    virtual_path = (connection.recv(virtual_path_size)).decode() #receive virtual path
-    print("Recieved path:", virtual_path)
-
-    if os.path.isfile(virtual_path):
-        file_size = os.path.getsize(virtual_path)  #size of file
+    print("in get")
+    path_size = int.from_bytes(connection.recv(1), 'big') #receive virtual path size
+    path = (connection.recv(path_size)).decode() #receive virtual path
+    print("Recieved path:", path)
+    print(absolute_path(path))
+    if os.path.exists(absolute_path(path)):
+        file_size = os.path.getsize(f'{path}')  #size of file
         sent = 0
-        file = open(virtual_path, "rb")
+        file = open(f'{path}', "rb")
         while True:
             print(f"{sent} of {file_size} bytes sent - {sent * 100 / file_size :.2f}% done")
             buf = file.read(1024) #send data of file
             if not buf:
                 break
-            sock.sendall(buf)
+            connection.sendall(buf)
             sent += len(buf)
+        connection.close()
         print("Finished!")
     else:
         print("Failed.")
@@ -122,7 +122,7 @@ def rm(connection, address):
 
     if os.path.exists(absolute_path(path)):
         try:
-            os.system(f'rm {path}{filename}')
+            os.system(f'rm {path}/{filename}')
             return
         except:
             print(f'Unable to remove file {filename}')
