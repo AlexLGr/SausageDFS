@@ -128,9 +128,9 @@ def ls():
         path = sessions[key][0] + '/' + dir_name
         temp = fs.get_child(path)
         if temp:
-            return Response({
+            return jsonify({
                 'content': temp.list_children()
-            }, status=200)
+            })
         else:
             return Response("Wrong directory", status=404)
     return Response("No session found for your account, please log in", status=400)
