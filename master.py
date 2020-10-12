@@ -189,7 +189,7 @@ def move():
         Response("No session found for your account, please log in", status=400)
 
 
-@app.route("/cp", methods=["PUT"])
+@app.route("/cp", methods=["POST"])
 def copy():
     key = request.args["key"]
 
