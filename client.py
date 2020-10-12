@@ -120,7 +120,7 @@ def move_file(*args):
     if not fidelity(args, 3):
         return 0
     file = args[1]
-    present = requests.post(os.path.join(MASTER, f"cp?name={file}"
+    present = requests.post(os.path.join(MASTER, f"cd?name={file}"
                                                  f"&key={secret_key}"))
     destination = args[2]
     tokens = destination.split("/")
