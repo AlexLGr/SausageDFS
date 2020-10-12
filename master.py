@@ -239,14 +239,13 @@ def download():
         temp = fs.get_child(path)
         if temp:
             if temp.sync:
-                return Response({
+                return jsonify({
                     'nodes': random.choice(temp.replicas)
-                }, status=200)
-
+                })
             else:
-                return Response({
+                return jsonify({
                     'nodes': temp.address
-                }, status=200)
+                })
         else:
             return Response("No such file was found", status=404)
     return Response("No session found for your account, please log in", status=400)
@@ -264,9 +263,9 @@ def upload():
         if temp:
             temp.add_child(FsTree(file))
 
-            return Response({
+            return jsonify({
                 'nodes': temp.get_child(file).address
-            }, status=200)
+            })
     else:
         return Response("Operation unavailable, please log in first", status=400)
 
