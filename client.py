@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 from os.path import isabs, join, normpath
+import socket
 
 working_directory = ""
 # TODO: change master address to the real thing
@@ -9,6 +10,7 @@ MASTER = os.getenv("MASTER", "http://localhost:3030/")
 user = ""
 password = ""
 secret_key = "-1"
+SEPARATOR = "<SEPARATOR>"
 
 
 def fidelity(args, amount):
@@ -70,7 +72,8 @@ def login(*args):
     )
     v = verify_response(resp)
     if v:
-        global secret_key
+        global secret_key, user
+        user = username
         secret_key = resp.content.decode()
         return 1
     else:
@@ -103,12 +106,11 @@ def upload_file(*args):
         response = resp.json()
         datanodes = response["nodes"]
         for node in datanodes:
-            resp = requests.put(join(node, f"upload?filename={path}"), data=file)
-            v = verify_response(resp)
-            if v:
-                return 1
-            else:
-                return 0
+            port = 9000
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((node, port))
+            sock.send(f"{filename}".encode())
+            sock.send(file)
         return 1
     else:
         return 0
