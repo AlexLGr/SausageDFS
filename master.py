@@ -235,7 +235,7 @@ def copy():
 
 @app.route("/download", methods=["POST"])
 def download():
-    path = request.args["name"]
+    path = request.args["filename"]
     key = request.args["key"]
 
     if check_session(key):
