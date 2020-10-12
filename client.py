@@ -90,31 +90,60 @@ def upload_file(*args):
     except OSError as e:
         print(e)
         return 0
-    if isabs(destination):
-        destination = normpath(destination)
-    else:
-        destination = normpath(join(working_directory, destination))
+#    if isabs(destination):
+#        destination = normpath(destination)
+#    else:
+#        destination = normpath(join(working_directory, destination))
     filename = os.path.basename(filepath)
-    split = filepath.split("/")
-    dest_dir = ' '.join(map(lambda x: '/' + str(x), split))
-    path = join(destination, filename)
-    resp = requests.post(os.path.join(MASTER, f"upload?filename={path}"
-                                              f"&path={dest_dir}"
+#    split = destination.split("/")
+#    dest_dir = ' '.join(map(lambda x: '/' + str(x), split))
+#    path = join(destination, filename)
+    print("I AM HERE")
+    resp = requests.post(os.path.join(MASTER, f"upload?filename={filename}"
+                                              f"&path={destination}"
                                               f"&key={secret_key}"))
+    print("я жив")
     v = verify_response(resp)
     if v:
         response = resp.json()
         datanodes = response["nodes"]
-        for node in datanodes:
-            port = 9000
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((node, port))
-            sock.send(f"{filename}".encode())
-            sock.send(file)
-        return 1
-    else:
-        return 0
+        print("DATANODES ARE" + datanodes)
+        port = 10001
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((datanodes, port))
 
+        sock.sendall(len("put").to_bytes(1, 'big')) #sending command
+        sock.sendall(str("put").encode())
+
+        global user
+        if(working_directory == ""):
+            destination = user + "/" + destination
+        else:
+            destination = working_directory + "/" + destination
+
+        sock.sendall(len(destination).to_bytes(1, 'big')) #sending path
+        sock.sendall(str(destination).encode())
+
+        sock.sendall(len(filename).to_bytes(1, 'big')) #sending filename
+        sock.sendall(str(filename).encode())
+
+
+        if os.path.isfile(filename):
+            file_size = os.path.getsize(filename)  #size of file
+            sent = 0
+            file = open(filename, "rb")
+            while True:
+                print(f"{sent} of {file_size} bytes sent - {sent * 100 / file_size :.2f}% done")
+                buf = file.read(1024) #send data of file
+                if not buf:
+                    break
+                sock.sendall(buf)
+                sent += len(buf)
+            sock.close()
+            print("Finished!")
+        else:
+            print("Failed.")
+    return 0
 
 def move_file(*args):
     if not fidelity(args, 3):
