@@ -262,9 +262,9 @@ def upload():
         temp = fs.get_child(path)
         if temp:
             temp.add_child(FsTree(file))
-
+            temp.get_child(file).set_sync(True)
             return jsonify({
-                'nodes': temp.get_child(file).address
+                'nodes': temp.get_child(file).replicas
             })
         else:
             return Response("No such directory was found", status=404)
