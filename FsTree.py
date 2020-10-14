@@ -9,18 +9,18 @@ class FsTree:
         self.address = ""
         self.replicas = []
         self.children = []
-        self.sync = False
+        self.syncr = False
 
     def set_path(self, path: str):
         self.path = path
 
     def set_sync(self, value: bool):
-        self.sync = value
+        self.syncr = value
 
     def add_child(self, child):
         if child not in self.children:
-            child.set_path(self.path + child.name)
-            child.set_replicas(random.choices(self.replicas, k=3))
+            child.set_path(self.path + "/" + child.name)
+            child.set_replicas(random.sample(self.replicas, k=3))
             child.set_address(random.choice(child.replicas))
             self.children.append(child)
         return True
@@ -29,7 +29,7 @@ class FsTree:
         self.replicas = replicas
         for child in self.children:
             child.set_replicas(replicas)
-        self.sync = False
+        self.syncr = False
         return True
 
     def set_address(self, address: str):
@@ -60,21 +60,23 @@ class FsTree:
         return response
 
     def sync(self):
-        if not self.sync:
-            port = 9000
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.address, port))
+        port = 10000
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((self.address, port))
 
-            command = "sync"
+        command = "sync"
 
-            sock.send(len(command).to_bytes(1, 'big'))
-            sock.send(command.encode())
+        sock.send(len(command).to_bytes(1, 'big'))
+        sock.send(command.encode())
 
-            sock.send(len(self.path).to_bytes(1, 'big'))
-            sock.send(self.path.encode())
+        sock.send(len(self.path).to_bytes(1, 'big'))
+        sock.send(self.path.encode())
 
-            sock.send(len(self.replicas).to_bytes(1, 'big'))
+        size = len(self.replicas)
+        sock.sendall(len(str(size)).to_bytes(1, 'big')) #sending size
+        sock.sendall(str(size).encode())
 
-            for replica in self.replicas:
-                if replica != self.address:
-                    sock.send(replica.encode())
+        for replica in self.replicas:
+        	if replica != self.address:
+        	    sock.send(len(replica).to_bytes(1, 'big'))
+        	    sock.send(replica.encode())
