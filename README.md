@@ -3,7 +3,7 @@ Distributed file system implementation.
 ### Team: Sausage Party
 ### Member contributions: 
     Zhandos - master node code (naming server)
-    Kamil - storage server sode 
+    Kamil - storage server сode 
     Alexandr - client code
 
 # How to launch the system:
@@ -15,7 +15,7 @@ Distributed file system implementation.
 * Clone docker-compose file for client from GitHub repository
 * run docker-compose 
 ```
-docker-compose up
+sudo docker run -it --network host kamilq1/client1:rep
 ```
 ### Name server
 * Clone docker-compose file for name server from GitHub repository
