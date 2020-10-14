@@ -13,7 +13,7 @@ Distributed file system implementation.
 
 ### Client
 * Clone docker-compose file for client from GitHub repository
-* run docker-compose 
+* run docker
 ```
 sudo docker run -it --network host kamilq1/client1:rep
 ```
